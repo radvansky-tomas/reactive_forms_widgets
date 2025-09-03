@@ -1,3 +1,11 @@
+## 1.0.0
+
+* Api change
+
+## 0.0.9
+
+* Support `reactive_forms: 18.x`
+
 ## 0.0.8
 
 * fix: error style application

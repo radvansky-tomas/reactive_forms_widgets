@@ -6,7 +6,7 @@ class ReactiveFormControlFocusConsumer<T> extends StatefulWidget {
   const ReactiveFormControlFocusConsumer({
     super.key,
     required this.builder,
-    required this.listener,
+    this.listener,
     this.formControlName,
     this.formControl,
     this.buildWhen,
@@ -22,7 +22,7 @@ class ReactiveFormControlFocusConsumer<T> extends StatefulWidget {
 
   final ReactiveFormControlWidgetBuilder<T> builder;
 
-  final ReactiveFormControlWidgetListener<T> listener;
+  final ReactiveFormControlWidgetListener<T>? listener;
 
   final ReactiveFormControlFocusBuilderCondition<T>? buildWhen;
 
@@ -90,7 +90,7 @@ class _ReactiveFormControlFocusConsumerState<T>
       builder: widget.builder,
       buildWhen: (control, previous, current) {
         if (widget.listenWhen?.call(control, previous, current) ?? true) {
-          widget.listener(context, _formControl);
+          widget.listener?.call(context, _formControl);
         }
         return widget.buildWhen?.call(_formControl, previous, current) ?? true;
       },

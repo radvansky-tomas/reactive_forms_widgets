@@ -6,7 +6,7 @@ class ReactiveFormControlTouchConsumer<T> extends StatefulWidget {
   const ReactiveFormControlTouchConsumer({
     super.key,
     required this.builder,
-    required this.listener,
+    this.listener,
     this.formControlName,
     this.formControl,
     this.buildWhen,
@@ -22,7 +22,7 @@ class ReactiveFormControlTouchConsumer<T> extends StatefulWidget {
 
   final ReactiveFormControlWidgetBuilder<T> builder;
 
-  final ReactiveFormControlWidgetListener<T> listener;
+  final ReactiveFormControlWidgetListener<T>? listener;
 
   final ReactiveFormControlTouchBuilderCondition<T>? buildWhen;
 
@@ -90,7 +90,7 @@ class _ReactiveFormControlTouchConsumerState<T>
       builder: widget.builder,
       buildWhen: (control, previous, current) {
         if (widget.listenWhen?.call(control, previous, current) ?? true) {
-          widget.listener(context, _formControl);
+          widget.listener?.call(context, _formControl);
         }
         return widget.buildWhen?.call(_formControl, previous, current) ?? true;
       },

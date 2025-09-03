@@ -1,4 +1,4 @@
-library reactive_range_slider;
+library;
 
 import 'package:flutter/material.dart';
 import 'package:reactive_forms/reactive_forms.dart';
@@ -44,8 +44,8 @@ class ReactiveRangeSlider<T> extends ReactiveFormField<T, RangeValues> {
     Color? activeColor,
     Color? inactiveColor,
     SemanticFormatterCallback? semanticFormatterCallback,
-    MaterialStateProperty<MouseCursor?>? mouseCursor,
-    MaterialStateProperty<Color?>? overlayColor,
+    WidgetStateProperty<MouseCursor?>? mouseCursor,
+    WidgetStateProperty<Color?>? overlayColor,
   }) : super(
           builder: (field) {
             final InputDecoration effectiveDecoration = (decoration ??

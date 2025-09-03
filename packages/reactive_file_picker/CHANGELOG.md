@@ -1,3 +1,18 @@
+## [4.0.1]
+
+* Support `reactive_forms: 18.x`
+* Fixed style in createState()
+
+## [4.0.0]
+
+* file_picker: ^10.1.2
+
+## [3.1.0]
+
+* mouse cursor
+* hover effect support
+* expose more input decorator props
+
 ## [3.0.3]
 
 * MultiFile.fromFiles allow null

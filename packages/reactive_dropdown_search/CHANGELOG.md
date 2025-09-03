@@ -1,3 +1,27 @@
+## [6.0.0-pre4]
+
+* add reference to original valueAccessor for items accessor
+
+## [6.0.0-pre3]
+
+* Split value item and value accessors
+
+## [6.0.0-pre2]
+
+* Support `reactive_forms: 18.x`
+
+## [6.0.0-pre1]
+
+* dropdown_search: ^7.0.0-pre4
+
+## [6.0.0-pre0]
+
+* dropdown_search: ^7.0.0-pre4
+
+## [5.0.6]
+
+* errorBuilder add errorMaxLines to default text style
+
 ## [5.0.5]
 
 * errorBuilder style application

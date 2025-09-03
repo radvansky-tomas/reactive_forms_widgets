@@ -1,4 +1,4 @@
-library reactive_dropdown_search;
+library;
 
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
@@ -10,9 +10,17 @@ import 'package:reactive_forms/reactive_forms.dart';
 abstract class DropDownSearchValueAccessor<T, V> {
   DropDownSearchValueAccessor();
 
-  V? modelToViewValue(List<V> items, T? modelValue);
+  V? modelToViewValue(
+    List<V> items,
+    T? modelValue,
+    ControlValueAccessor<T, V> accessor,
+  );
 
-  T? viewToModelValue(List<V> items, V? modelValue);
+  T? viewToModelValue(
+    List<V> items,
+    V? modelValue,
+    ControlValueAccessor<T, V> accessor,
+  );
 }
 
 class _DropDownSearchValueAccessor<T, V> extends ControlValueAccessor<T, V> {
@@ -29,7 +37,11 @@ class _DropDownSearchValueAccessor<T, V> extends ControlValueAccessor<T, V> {
   V? modelToViewValue(T? modelValue) {
     final result = items?.call('', null) ?? [];
     if (result is List<V>) {
-      return dropDownValueAccessor.modelToViewValue(result, modelValue);
+      return dropDownValueAccessor.modelToViewValue(
+        result,
+        modelValue,
+        this,
+      );
     }
 
     throw UnsupportedError('Asynchronously fetched values are not supported');
@@ -40,7 +52,11 @@ class _DropDownSearchValueAccessor<T, V> extends ControlValueAccessor<T, V> {
     final result = items?.call('', null) ?? [];
 
     if (result is List<V>) {
-      return dropDownValueAccessor.viewToModelValue(result, viewValue);
+      return dropDownValueAccessor.viewToModelValue(
+        result,
+        viewValue,
+        this,
+      );
     }
 
     throw UnsupportedError('Asynchronously fetched values are not supported');
@@ -124,7 +140,8 @@ class ReactiveDropdownSearch<T, V> extends ReactiveFormField<T, V> {
     super.formControlName,
     super.formControl,
     super.validationMessages,
-    DropDownSearchValueAccessor<T, V>? valueAccessor,
+    ControlValueAccessor<T, V>? valueAccessor,
+    DropDownSearchValueAccessor<T, V>? valueItemAccessor,
     super.showErrors,
 
     ////////////////////////////////////////////////////////////////////////////
@@ -144,21 +161,26 @@ class ReactiveDropdownSearch<T, V> extends ReactiveFormField<T, V> {
     BeforePopupOpening<V>? onBeforePopupOpening,
     Widget Function(BuildContext context, String error)? errorBuilder,
   }) : super(
-          valueAccessor: valueAccessor != null
-              ? _DropDownSearchValueAccessor(
-                  items: items,
-                  dropDownValueAccessor: valueAccessor,
-                )
-              : null,
+          valueAccessor: switch (valueAccessor) {
+            ControlValueAccessor<T, V>() => valueAccessor,
+            null => switch (valueItemAccessor) {
+                DropDownSearchValueAccessor<T, V>() =>
+                  _DropDownSearchValueAccessor(
+                    items: items,
+                    dropDownValueAccessor: valueItemAccessor,
+                  ),
+                null => null,
+              },
+          },
           builder: (field) {
             final effectiveDecoration = dropdownDecoratorProps.decoration
-                .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+                ?.applyDefaults(Theme.of(field.context).inputDecorationTheme);
 
             final errorText = field.errorText;
 
             return DropdownSearch<V>(
               key: widgetKey,
-              onChanged: field.didChange,
+              onSelected: field.didChange,
               popupProps: popupProps,
               selectedItem: field.value,
               dropdownBuilder: dropdownBuilder,
@@ -171,7 +193,7 @@ class ReactiveDropdownSearch<T, V> extends ReactiveFormField<T, V> {
               onBeforeChange: onBeforeChange,
               onBeforePopupOpening: onBeforePopupOpening,
               decoratorProps: DropDownDecoratorProps(
-                decoration: effectiveDecoration.copyWith(
+                decoration: effectiveDecoration?.copyWith(
                   errorText: errorBuilder == null ? errorText : null,
                   error: errorBuilder != null && errorText != null
                       ? DefaultTextStyle.merge(
@@ -183,6 +205,7 @@ class ReactiveDropdownSearch<T, V> extends ReactiveFormField<T, V> {
                                     Theme.of(field.context).colorScheme.error,
                               )
                               .merge(effectiveDecoration.errorStyle),
+                          maxLines: effectiveDecoration.errorMaxLines,
                           child: errorBuilder.call(
                             field.context,
                             errorText,

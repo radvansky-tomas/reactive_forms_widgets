@@ -1,4 +1,4 @@
-library reactive_file_picker;
+library;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -106,12 +106,20 @@ class ReactiveFilePicker<T>
     FileType type = FileType.any,
     List<String>? allowedExtensions,
     Function(FilePickerStatus)? onFileLoading,
-    bool allowCompression = false,
+    int compressionQuality = 0,
     bool withData = false,
     bool withReadStream = false,
     bool lockParentWindow = false,
     double disabledOpacity = 0.5,
     String? initialDirectory,
+    Widget Function(BuildContext context, String error)? errorBuilder,
+
+    // input decorator props
+    TextStyle? baseStyle,
+    TextAlign? textAlign,
+    TextAlignVertical? textAlignVertical,
+    bool expands = false,
+    MouseCursor cursor = SystemMouseCursors.basic,
   }) : super(
           builder: (field) {
             final value = field.value ?? MultiFile<T>();
@@ -131,7 +139,7 @@ class ReactiveFilePicker<T>
                       type: type,
                       allowedExtensions: allowedExtensions,
                       onFileLoading: onFileLoading,
-                      allowCompression: allowCompression,
+                      compressionQuality: compressionQuality,
                       withData: withData,
                       withReadStream: withReadStream,
                       lockParentWindow: lockParentWindow,
@@ -157,22 +165,89 @@ class ReactiveFilePicker<T>
               }
             }
 
-            return InputDecorator(
-              decoration: effectiveDecoration.copyWith(
-                errorText: field.errorText ?? pickerError,
-                enabled: field.control.enabled,
-              ),
-              child: IgnorePointer(
-                ignoring: !field.control.enabled,
-                child: Opacity(
-                  opacity: field.control.enabled ? 1 : disabledOpacity,
-                  child: filePickerBuilder?.call(pickFile, value, (files) {
-                    field.control.markAsTouched();
-                    field.didChange(files);
-                  }),
-                ),
+            final errorText = field.errorText;
+
+            final isEmptyValue = field.value == null ||
+                (field.value?.platformFiles.isEmpty == true &&
+                    field.value?.files.isEmpty == true);
+
+            return IgnorePointer(
+              ignoring: !field.control.enabled,
+              child: MouseRegion(
+                cursor: cursor,
+                child: HoverBuilder(builder: (context, isHovered) {
+                  return InputDecorator(
+                    isHovering: isHovered,
+                    baseStyle: baseStyle,
+                    textAlign: textAlign,
+                    textAlignVertical: textAlignVertical,
+                    expands: expands,
+                    isEmpty: isEmptyValue,
+                    decoration: effectiveDecoration.copyWith(
+                      enabled: field.control.enabled,
+                      errorText: errorBuilder == null
+                          ? field.errorText ?? pickerError
+                          : null,
+                      error: errorBuilder != null && errorText != null
+                          ? DefaultTextStyle.merge(
+                              style: Theme.of(field.context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(field.context)
+                                        .colorScheme
+                                        .error,
+                                  )
+                                  .merge(effectiveDecoration.errorStyle),
+                              child: errorBuilder.call(
+                                field.context,
+                                errorText,
+                              ),
+                            )
+                          : null,
+                    ),
+                    child: Opacity(
+                      opacity: field.control.enabled ? 1 : disabledOpacity,
+                      child: filePickerBuilder?.call(pickFile, value, (files) {
+                        field.control.markAsTouched();
+                        field.didChange(files);
+                      }),
+                    ),
+                  );
+                }),
               ),
             );
           },
         );
+}
+
+class HoverBuilder extends StatefulWidget {
+  const HoverBuilder({
+    required this.builder,
+    super.key,
+  });
+
+  final Widget Function(BuildContext context, bool isHovered) builder;
+
+  @override
+  State<HoverBuilder> createState() => _HoverBuilderState();
+}
+
+class _HoverBuilderState extends State<HoverBuilder> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (event) => _onHoverChanged(enabled: true),
+      onExit: (event) => _onHoverChanged(enabled: false),
+      child: widget.builder(context, _isHovered),
+    );
+  }
+
+  void _onHoverChanged({required bool enabled}) {
+    setState(() {
+      _isHovered = enabled;
+    });
+  }
 }

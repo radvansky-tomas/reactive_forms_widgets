@@ -1,4 +1,4 @@
-library reactive_dropdown_search;
+library;
 
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -10,9 +10,17 @@ import 'package:reactive_forms/reactive_forms.dart';
 abstract class DropDownSearchMultiSelectionValueAccessor<T, V> {
   DropDownSearchMultiSelectionValueAccessor();
 
-  List<V>? modelToViewValue(List<V> items, List<T>? modelValue);
+  List<V>? modelToViewValue(
+    List<V> items,
+    List<T>? modelValue,
+    ControlValueAccessor<List<T>, List<V>> accessor,
+  );
 
-  List<T>? viewToModelValue(List<V> items, List<V>? modelValue);
+  List<T>? viewToModelValue(
+    List<V> items,
+    List<V>? modelValue,
+    ControlValueAccessor<List<T>, List<V>> accessor,
+  );
 }
 
 class _DropDownSearchMultiSelectionValueAccessor<T, V>
@@ -30,7 +38,11 @@ class _DropDownSearchMultiSelectionValueAccessor<T, V>
   List<V>? modelToViewValue(List<T>? modelValue) {
     final result = items?.call('', null) ?? [];
     if (result is List<V>) {
-      return dropDownValueAccessor.modelToViewValue(result, modelValue);
+      return dropDownValueAccessor.modelToViewValue(
+        result,
+        modelValue,
+        this,
+      );
     }
 
     throw UnsupportedError('Asynchronously fetched values are not supported');
@@ -41,7 +53,11 @@ class _DropDownSearchMultiSelectionValueAccessor<T, V>
     final result = items?.call('', null) ?? [];
 
     if (result is List<V>) {
-      return dropDownValueAccessor.viewToModelValue(result, viewValue);
+      return dropDownValueAccessor.viewToModelValue(
+        result,
+        viewValue,
+        this,
+      );
     }
 
     throw UnsupportedError('Asynchronously fetched values are not supported');
@@ -126,7 +142,8 @@ class ReactiveDropdownSearchMultiSelection<T, V>
     super.formControlName,
     super.formControl,
     super.validationMessages,
-    DropDownSearchMultiSelectionValueAccessor<T, V>? valueAccessor,
+    ControlValueAccessor<List<T>, List<V>>? valueAccessor,
+    DropDownSearchMultiSelectionValueAccessor<T, V>? valueItemAccessor,
     super.showErrors,
 
     ////////////////////////////////////////////////////////////////////////////
@@ -135,8 +152,8 @@ class ReactiveDropdownSearchMultiSelection<T, V>
     DropdownSearchFilterFn<V>? filterFn,
     DropdownSearchItemAsString<V>? itemAsString,
     DropdownSearchCompareFn<V>? compareFn,
-    PopupPropsMultiSelection<V> popupProps =
-        const PopupPropsMultiSelection.menu(),
+    MultiSelectionPopupProps<V> popupProps =
+        const MultiSelectionPopupProps.menu(),
     ScrollProps? selectedItemsScrollProps,
     BeforeChangeMultiSelection<V?>? onBeforeChange,
     FormFieldSetter<List<V>>? onSaved,
@@ -147,21 +164,26 @@ class ReactiveDropdownSearchMultiSelection<T, V>
     BeforePopupOpeningMultiSelection<V>? onBeforePopupOpening,
     Widget Function(BuildContext context, String error)? errorBuilder,
   }) : super(
-          valueAccessor: valueAccessor != null
-              ? _DropDownSearchMultiSelectionValueAccessor(
-                  items: items,
-                  dropDownValueAccessor: valueAccessor,
-                )
-              : null,
+          valueAccessor: switch (valueAccessor) {
+            ControlValueAccessor<List<T>, List<V>>() => valueAccessor,
+            null => switch (valueItemAccessor) {
+                DropDownSearchMultiSelectionValueAccessor<T, V>() =>
+                  _DropDownSearchMultiSelectionValueAccessor(
+                    items: items,
+                    dropDownValueAccessor: valueItemAccessor,
+                  ),
+                null => null,
+              },
+          },
           builder: (field) {
             final effectiveDecoration = dropdownDecoratorProps.decoration
-                .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+                ?.applyDefaults(Theme.of(field.context).inputDecorationTheme);
 
             final errorText = field.errorText;
 
             return DropdownSearch<V>.multiSelection(
               key: widgetKey,
-              onChanged: (value) =>
+              onSelected: (value) =>
                   field.didChange(value.isEmpty ? null : value),
               popupProps: popupProps,
               selectedItems: field.value ?? [],
@@ -176,22 +198,24 @@ class ReactiveDropdownSearchMultiSelection<T, V>
               itemAsString: itemAsString,
               compareFn: compareFn,
               decoratorProps: DropDownDecoratorProps(
-                decoration: effectiveDecoration.copyWith(
+                decoration: effectiveDecoration?.copyWith(
                   errorText: errorBuilder == null ? errorText : null,
                   error: errorBuilder != null && errorText != null
                       ? DefaultTextStyle.merge(
-                    style: Theme.of(field.context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(
-                      color:
-                      Theme.of(field.context).colorScheme.error,
-                    ).merge(effectiveDecoration.errorStyle),
-                    child: errorBuilder.call(
-                      field.context,
-                      errorText,
-                    ),
-                  )
+                          style: Theme.of(field.context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color:
+                                    Theme.of(field.context).colorScheme.error,
+                              )
+                              .merge(effectiveDecoration.errorStyle),
+                          maxLines: effectiveDecoration.errorMaxLines,
+                          child: errorBuilder.call(
+                            field.context,
+                            errorText,
+                          ),
+                        )
                       : null,
                 ),
                 baseStyle: dropdownDecoratorProps.baseStyle,

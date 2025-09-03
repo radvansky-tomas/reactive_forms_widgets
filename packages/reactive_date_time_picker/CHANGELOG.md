@@ -1,3 +1,36 @@
+## [5.0.1]
+
+* Support `reactive_forms: 18.x`
+* Fixed style in createState()
+
+## [5.0.0]
+
+* remove deprecated disabledOpacity
+
+## [4.5.0]
+
+* more props pass through
+* custom picker integration
+
+## [4.4.0]
+
+* valueBuilder method
+
+## [4.3.0]
+
+* mouse cursor
+
+## [4.2.0]
+
+* hover effect support
+* expose more input decorator props
+
+## [4.1.0]
+
+* improved disabled state handling
+* errorBuilder
+* deprecate disabledOpacity
+
 ## [4.0.0]
 
 * fixes https://github.com/artflutter/reactive_forms_widgets/issues/139

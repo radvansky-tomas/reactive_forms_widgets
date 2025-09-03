@@ -1,4 +1,4 @@
-library reactive_checkbox;
+library;
 
 // Copyright 2020 Joan Pablo Jimenez Milian. All rights reserved.
 // Use of this source code is governed by the MIT license that can be
@@ -42,8 +42,8 @@ class ReactiveCheckbox<T> extends ReactiveFormField<T, bool> {
     MaterialTapTargetSize? materialTapTargetSize,
     VisualDensity? visualDensity,
     bool autofocus = false,
-    MaterialStateProperty<Color?>? fillColor,
-    MaterialStateProperty<Color?>? overlayColor,
+    WidgetStateProperty<Color?>? fillColor,
+    WidgetStateProperty<Color?>? overlayColor,
     double? splashRadius,
     FocusNode? focusNode,
     OutlinedBorder? shape,
