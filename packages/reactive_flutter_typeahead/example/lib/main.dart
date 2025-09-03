@@ -38,6 +38,79 @@ class TypeaheadExample extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            ReactiveTypeAhead<String, String>(
+              formControlName: 'city',
+              stringify: (value) => value,
+              suggestionsCallback: (pattern) async {
+                // Simulated API call
+                await Future.delayed(const Duration(milliseconds: 500));
+                final cities = [
+                  'New York',
+                  'Los Angeles',
+                  'Chicago',
+                  'Houston',
+                  'Phoenix',
+                  'Philadelphia',
+                  'San Antonio',
+                  'San Diego',
+                  'Dallas',
+                  'San Jose',
+                  'Austin',
+                  'Jacksonville',
+                  'Fort Worth',
+                  'Columbus',
+                  'San Francisco',
+                  'Charlotte',
+                  'Indianapolis',
+                  'Seattle',
+                  'Denver',
+                  'Washington',
+                  'Boston',
+                  'El Paso',
+                  'Detroit',
+                  'Nashville',
+                  'Portland',
+                  'Memphis',
+                  'Oklahoma City',
+                  'Las Vegas',
+                  'Louisville',
+                  'Baltimore',
+                  'Milwaukee',
+                  'Albuquerque',
+                  'Tucson',
+                  'Fresno',
+                  'Sacramento',
+                  'Kansas City',
+                  'Long Beach',
+                  'Mesa',
+                  'Atlanta',
+                  'Colorado Springs',
+                  'Virginia Beach',
+                  'Raleigh',
+                  'Omaha',
+                  'Miami',
+                  'Oakland',
+                  'Minneapolis',
+                  'Tulsa',
+                  'Bakersfield',
+                  'Wichita',
+                  'New Orleans',
+                ];
+                return cities
+                    .where((city) =>
+                        city.toLowerCase().contains(pattern.toLowerCase()))
+                    .toList();
+              },
+              itemBuilder: (context, city) {
+                return ListTile(
+                  title: Text(city),
+                );
+              },
+              decoration: const InputDecoration(
+                labelText: 'City',
+                helperText: 'Start typing a city name',
+              ),
+            ),
             ElevatedButton(
               onPressed: () {
                 form.control('city').markAsEnabled();
@@ -60,34 +133,6 @@ class TypeaheadExample extends StatelessWidget {
                   form.control('city').value = null;
                 },
                 child: const Text('Clear value')),
-            ReactiveTypeAhead<String, String>(
-              formControlName: 'city',
-              stringify: (value) => value,
-              suggestionsCallback: (pattern) async {
-                // Simulated API call
-                await Future.delayed(const Duration(milliseconds: 500));
-                final cities = [
-                  'New York',
-                  'Los Angeles',
-                  'Chicago',
-                  'Houston',
-                  'Phoenix',
-                ];
-                return cities
-                    .where((city) =>
-                        city.toLowerCase().contains(pattern.toLowerCase()))
-                    .toList();
-              },
-              itemBuilder: (context, city) {
-                return ListTile(
-                  title: Text(city),
-                );
-              },
-              decoration: const InputDecoration(
-                labelText: 'City',
-                helperText: 'Start typing a city name',
-              ),
-            ),
             const SizedBox(height: 16),
             ReactiveFormConsumer(
               builder: (context, form, child) {

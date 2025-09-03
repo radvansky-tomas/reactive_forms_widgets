@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderBox;
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 import 'dart:async';
@@ -106,7 +107,7 @@ class ReactiveTypeAhead<T, V> extends ReactiveFormField<T, V> {
     bool hideWithKeyboard = true,
     bool retainOnLoading = true,
     bool hideOnSelect = true,
-    bool autoFlipDirection = false,
+    bool autoFlipDirection = true,
     SuggestionsController<V>? suggestionsController,
     ScrollController? scrollController,
     bool hideKeyboardOnDrag = false,
@@ -143,6 +144,44 @@ class ReactiveTypeAhead<T, V> extends ReactiveFormField<T, V> {
               controller.text = stringify(field.value as V);
             }
 
+            final resolvedDecorationBuilder = decorationBuilder ??
+                (BuildContext context, Widget child) {
+                  final mediaQuery = MediaQuery.of(context);
+                  final double keyboardHeight = mediaQuery.viewInsets.bottom;
+                  final Size screenSize = mediaQuery.size;
+
+                  double availableHeight = screenSize.height - keyboardHeight;
+
+                  final renderBox = state._textFieldKey.currentContext
+                      ?.findRenderObject() as RenderBox?;
+                  if (renderBox != null) {
+                    final Offset fieldTopLeft =
+                        renderBox.localToGlobal(Offset.zero);
+                    final double fieldBottom =
+                        fieldTopLeft.dy + renderBox.size.height;
+                    final double verticalOffset =
+                        (offset ?? const Offset(0, 5.0)).dy;
+                    availableHeight -= (fieldBottom + verticalOffset);
+                  }
+
+                  if (availableHeight < 0) {
+                    availableHeight = 0;
+                  }
+
+                  return Material(
+                    elevation: 4,
+                    color: Theme.of(context).cardColor,
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    clipBehavior: Clip.hardEdge,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: availableHeight,
+                      ),
+                      child: child,
+                    ),
+                  );
+                };
+
             return TypeAheadField<V>(
               controller: controller,
               suggestionsCallback: suggestionsCallback,
@@ -162,6 +201,7 @@ class ReactiveTypeAhead<T, V> extends ReactiveFormField<T, V> {
                 }
 
                 return TextField(
+                  key: state._textFieldKey,
                   controller: controller,
                   focusNode: focusNode,
                   decoration: effectiveDecoration.copyWith(
@@ -190,7 +230,7 @@ class ReactiveTypeAhead<T, V> extends ReactiveFormField<T, V> {
                   },
                 );
               },
-              decorationBuilder: decorationBuilder,
+              decorationBuilder: resolvedDecorationBuilder,
               debounceDuration: debounceDuration,
               suggestionsController: fieldSuggestionsController,
               loadingBuilder: loadingBuilder,
@@ -227,6 +267,7 @@ class _ReactiveTypeaheadState<T, V> extends ReactiveFormFieldState<T, V> {
 
   FocusNode? _focusNode;
   late FocusController _focusController;
+  final GlobalKey _textFieldKey = GlobalKey();
 
   @override
   FocusNode get focusNode => _focusNode ?? _focusController.focusNode;
