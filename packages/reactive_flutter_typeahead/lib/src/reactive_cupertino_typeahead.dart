@@ -6,7 +6,6 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show RenderBox;
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
@@ -147,36 +146,15 @@ class ReactiveCupertinoTypeAhead<T, V> extends ReactiveFormField<T, V> {
 
             final resolvedDecorationBuilder = decorationBuilder ??
                 (BuildContext context, Widget child) {
-                  final mediaQuery = MediaQuery.of(context);
-                  final double keyboardHeight = mediaQuery.viewInsets.bottom;
-                  final Size screenSize = mediaQuery.size;
-
-                  double availableHeight = screenSize.height - keyboardHeight;
-
-                  final renderBox = state._textFieldKey.currentContext
-                      ?.findRenderObject() as RenderBox?;
-                  if (renderBox != null) {
-                    final Offset fieldTopLeft =
-                        renderBox.localToGlobal(Offset.zero);
-                    final double fieldBottom =
-                        fieldTopLeft.dy + renderBox.size.height;
-                    final double verticalOffset =
-                        (offset ?? const Offset(0, 5.0)).dy;
-                    availableHeight -= (fieldBottom + verticalOffset);
-                  }
-
-                  if (availableHeight < 0) {
-                    availableHeight = 0;
-                  }
-
                   return DecoratedBox(
                     decoration: BoxDecoration(
-                      color: CupertinoTheme.of(context).scaffoldBackgroundColor,
+                      color: CupertinoTheme.of(field.context)
+                          .scaffoldBackgroundColor,
                       borderRadius: const BorderRadius.all(Radius.circular(8)),
                       boxShadow: [
                         BoxShadow(
                           color: CupertinoDynamicColor.resolve(
-                                  CupertinoColors.black, context)
+                                  CupertinoColors.black, field.context)
                               .withOpacity(0.2),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
@@ -185,12 +163,7 @@ class ReactiveCupertinoTypeAhead<T, V> extends ReactiveFormField<T, V> {
                     ),
                     child: ClipRRect(
                       borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxHeight: availableHeight,
-                        ),
-                        child: child,
-                      ),
+                      child: child,
                     ),
                   );
                 };

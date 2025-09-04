@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show RenderBox;
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 import 'dart:async';
@@ -146,39 +145,12 @@ class ReactiveTypeAhead<T, V> extends ReactiveFormField<T, V> {
 
             final resolvedDecorationBuilder = decorationBuilder ??
                 (BuildContext context, Widget child) {
-                  final mediaQuery = MediaQuery.of(context);
-                  final double keyboardHeight = mediaQuery.viewInsets.bottom;
-                  final Size screenSize = mediaQuery.size;
-
-                  double availableHeight = screenSize.height - keyboardHeight;
-
-                  final renderBox = state._textFieldKey.currentContext
-                      ?.findRenderObject() as RenderBox?;
-                  if (renderBox != null) {
-                    final Offset fieldTopLeft =
-                        renderBox.localToGlobal(Offset.zero);
-                    final double fieldBottom =
-                        fieldTopLeft.dy + renderBox.size.height;
-                    final double verticalOffset =
-                        (offset ?? const Offset(0, 5.0)).dy;
-                    availableHeight -= (fieldBottom + verticalOffset);
-                  }
-
-                  if (availableHeight < 0) {
-                    availableHeight = 0;
-                  }
-
                   return Material(
                     elevation: 4,
-                    color: Theme.of(context).cardColor,
+                    color: Theme.of(field.context).cardColor,
                     borderRadius: const BorderRadius.all(Radius.circular(8)),
                     clipBehavior: Clip.hardEdge,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: availableHeight,
-                      ),
-                      child: child,
-                    ),
+                    child: child,
                   );
                 };
 
